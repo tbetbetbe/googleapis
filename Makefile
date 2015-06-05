@@ -18,20 +18,22 @@ LANGUAGE ?= cpp
 # directory is not "/usr/local/include", you need to modify this file.
 #
 
+PROTOC:= $(shell which protoc)
+PLUGIN:= $(shell which grpc_$(LANGUAGE)_plugin)
 DEPS:= $(shell find google -type f -name '*.proto' | sed 's/proto$$/pb.go/')
 FLAGS+= --proto_path=.:/usr/local/include
 ifeq ($(LANGUAGE),go)
 	FLAGS+= --$(LANGUAGE)_out=plugins=grpc:$(OUTPUT)
 else
 	FLAGS+= --$(LANGUAGE)_out=$(OUTPUT) --grpc_out=$(OUTPUT)
-	FLAGS+=	--plugin=protoc-gen-grpc=/usr/local/bin/grpc_$(LANGUAGE)_plugin
+	FLAGS+=	--plugin=protoc-gen-grpc=$(PLUGIN)
 endif
 
 all: $(DEPS)
 
 %.pb.go:  %.proto
 	mkdir -p $(OUTPUT)
-	protoc $(FLAGS) $<
+	$(PROTOC) $(FLAGS) $<
 
 clean:
 	rm $(patsubst %,$(OUTPUT)/%,$(DEPS)) 2> /dev/null
